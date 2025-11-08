@@ -1,6 +1,8 @@
 from copy import deepcopy
 import multiprocessing
-import os, sys, argparse
+import os
+import sys
+import argparse
 import random
 import csv
 from helper_functions import find_records
