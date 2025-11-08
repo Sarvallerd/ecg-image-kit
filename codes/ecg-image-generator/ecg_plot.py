@@ -321,7 +321,7 @@ def ecg_plot(
                 y_offset - lead_name_offset - 0.2,
                 leadName,
                 fontsize=lead_fontsize,
-                color=color_dict[i],
+                # color=color_dict[i],
             )
             t1 = ax.text(
                 x_offset + x_gap + dc_offset,
@@ -498,7 +498,7 @@ def ecg_plot(
                 row_height / 2 - lead_name_offset,
                 full_mode,
                 fontsize=lead_fontsize,
-                color=color_dict[12],
+                # color=color_dict[12],
             )
             t1 = ax.text(
                 x_gap + dc_offset,
@@ -625,7 +625,7 @@ def ecg_plot(
                     curr_l = ""
                     if j in attributes.keys():
                         curr_l += str(attributes[j])
-                    # ax_text.text(x_offset, y_offset, curr_l, fontsize=lead_fontsize)
+                    ax_text.text(x_offset, y_offset, curr_l, fontsize=lead_fontsize)
                     ax.text(x_offset, y_offset, curr_l, fontsize=lead_fontsize)
                     x_offset += 3
 
@@ -639,8 +639,8 @@ def ecg_plot(
     # change x and y res
     ax.text(2, 0.5, "25mm/s", fontsize=lead_fontsize)
     ax.text(4, 0.5, "10mm/mV", fontsize=lead_fontsize)
-    # ax_text.text(2, 0.5, "25mm/s", fontsize=lead_fontsize)
-    # ax_text.text(4, 0.5, "10mm/mV", fontsize=lead_fontsize)
+    ax_text.text(2, 0.5, "25mm/s", fontsize=lead_fontsize)
+    ax_text.text(4, 0.5, "10mm/mV", fontsize=lead_fontsize)
 
     if show_grid:
         ax.set_xticks(np.arange(x_min, x_max, x_grid_size))
@@ -743,8 +743,16 @@ def ecg_plot(
 
 
 
-    fig_text.savefig(os.path.join(output_dir, tail + "_text.png"), dpi=resolution)
-    plt.close(fig_leads)
+    buf = BytesIO()
+    fig_text.savefig(buf, dpi=resolution)
+    plt.close(fig_text)
+    buf.seek(0)
+    img = Image.open(buf).convert("RGB")
+    image_matrix = np.array(img)
+    cv2.imwrite(
+        os.path.join(output_dir, tail + "_text.png"),
+        image_matrix.mean(axis=2).astype(np.uint8),
+    )
 
     json_dict["leads"] = leads_ds
 
