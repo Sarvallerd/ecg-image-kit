@@ -725,9 +725,18 @@ def ecg_plot(
         os.path.join(output_dir, tail + "_grid.png"),
         image_matrix.mean(axis=2).astype(np.uint8),
     )
-    fig_text.savefig(os.path.join(output_dir, tail + "_text.png"))
+    # fig_text.savefig(os.path.join(output_dir, tail + "_text.png"))
+    buf = BytesIO()
+    fig_text.savefig(buf, dpi=resolution)
     plt.close(fig_text)
-    fig_leads.savefig(os.path.join(output_dir, tail + "_leads.png"))
+    buf.seek(0)
+    img = Image.open(buf).convert("RGB")
+    image_matrix = np.array(img)
+    cv2.imwrite(
+        os.path.join(output_dir, tail + "_text.png"),
+        image_matrix.mean(axis=2).astype(np.uint8),
+    )
+    fig_leads.savefig(os.path.join(output_dir, tail + "_leads.png"), dpi=resolution)
     plt.close(fig_leads)
 
     json_dict["leads"] = leads_ds
