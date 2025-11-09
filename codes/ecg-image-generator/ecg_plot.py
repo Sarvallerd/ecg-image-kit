@@ -228,6 +228,16 @@ def ecg_plot(
         x_min,
         x_max,
     )
+    fig_grid, ax_grid = create_fig_ax(
+        width,
+        height,
+        resolution,
+        title,
+        y_min,
+        y_max,
+        x_min,
+        x_max,
+    )
 
     # Mark grid based on whether we want black and white or colour
 
@@ -355,12 +365,12 @@ def ecg_plot(
         if columns == 1 and i in np.arange(0, rows):
             if show_dc_pulse:
                 # Plot dc pulse for 0.2 seconds with 2 trailing and leading zeros to get the pulse
-                # ax_leads.plot(
-                #     x_range + x_offset + x_gap,
-                #     dc_pulse + y_offset,
-                #     linewidth=line_width * 1.5,
-                #     color=color_line,
-                # )
+                ax_text.plot(
+                    x_range + x_offset + x_gap,
+                    dc_pulse + y_offset,
+                    linewidth=line_width * 1.5,
+                    # color=color_line,
+                )
                 t1 = ax.plot(
                     x_range + x_offset + x_gap,
                     dc_pulse + y_offset,
@@ -377,19 +387,19 @@ def ecg_plot(
         elif i % columns == 0:
             if show_dc_pulse:
                 # Plot dc pulse for 0.2 seconds with 2 trailing and leading zeros to get the pulse
-                # ax_leads.plot(
-                #     np.arange(
-                #         0,
-                #         sample_rate * standard_values["dc_offset_length"] * step
-                #         + 4 * step,
-                #         step,
-                #     )
-                #     + x_offset
-                #     + x_gap,
-                #     dc_pulse + y_offset,
-                #     linewidth=line_width * 1.5,
-                #     color=color_line,
-                # )
+                ax_text.plot(
+                    np.arange(
+                        0,
+                        sample_rate * standard_values["dc_offset_length"] * step
+                        + 4 * step,
+                        step,
+                    )
+                    + x_offset
+                    + x_gap,
+                    dc_pulse + y_offset,
+                    linewidth=line_width * 1.5,
+                    # color=color_line,
+                )
                 t1 = ax.plot(
                     np.arange(
                         0,
@@ -486,7 +496,7 @@ def ecg_plot(
                 y_offset + tickSize_step * y_grid_dots * tickLength / 2,
                 len(sep_x),
             )
-            # ax_leads.plot(sep_x, sep_y, linewidth=line_width * 3, color=color_line)
+            ax_text.plot(sep_x, sep_y, linewidth=line_width * 3, color=color_line)
             ax.plot(sep_x, sep_y, linewidth=line_width * 3, color=color_line)
 
     # Plotting longest lead for 12 seconds
@@ -528,12 +538,12 @@ def ecg_plot(
             current_lead_ds["lead_name"] = full_mode
 
         if show_dc_pulse:
-            # ax_leads.plot(
-            #     x_range + x_gap,
-            #     dc_pulse + row_height / 2 - lead_name_offset + 0.8,
-            #     linewidth=line_width * 1.5,
-            #     color=color_line,
-            # )
+            ax_text.plot(
+                x_range + x_gap,
+                dc_pulse + row_height / 2 - lead_name_offset + 0.8,
+                linewidth=line_width * 1.5,
+                # color=color_line,
+            )
             t1 = ax.plot(
                 x_range + x_gap,
                 dc_pulse + row_height / 2 - lead_name_offset + 0.8,
@@ -696,25 +706,14 @@ def ecg_plot(
         plt.clf()
         plt.cla()
 
-    fig, ax = plt.subplots(figsize=(width, height), dpi=resolution)
-    fig.subplots_adjust(hspace=0, wspace=0, left=0, right=1, bottom=0, top=1)
-    fig.suptitle(title)
-    ax.set_ylim(y_min, y_max)
-    ax.set_xlim(x_min, x_max)
-    ax.tick_params(axis="x", colors="white")
-    ax.tick_params(axis="y", colors="white")
-    ax.set_xticks(np.arange(x_min, x_max, x_grid_size))
-    ax.set_yticks(np.arange(y_min, y_max, y_grid_size))
-    # ax.minorticks_on()
-
-    # ax.xaxis.set_minor_locator(AutoMinorLocator(5))
-
-    # set grid line style
-    ax.grid(which="major", linestyle="-", linewidth=grid_line_width, color=color_major)
+    
+    ax_grid.set_xticks(np.arange(x_min, x_max, x_grid_size))
+    ax_grid.set_yticks(np.arange(y_min, y_max, y_grid_size))
+    ax_grid.grid(which="major", linestyle="-", linewidth=grid_line_width, color=color_major)
 
     # ax.grid(which="minor", linestyle="-", linewidth=grid_line_width, color=color_minor)
     buf = BytesIO()
-    fig.savefig(
+    fig_grid.savefig(
         buf,
         dpi=resolution,
     )
@@ -722,11 +721,11 @@ def ecg_plot(
     buf.seek(0)
 
     img = Image.open(buf).convert("RGB")
-    image_matrix = np.array(img)
-    cv2.imwrite(
-        os.path.join(output_dir, tail + "_grid.png"),
-        image_matrix.mean(axis=2).astype(np.uint8),
-    )
+    grid_image_matrix = np.array(img).mean(axis=2).astype(np.uint8)
+    # cv2.imwrite(
+    #     os.path.join(output_dir, tail + "_grid.png"),
+    #     image_matrix.mean(axis=2).astype(np.uint8),
+    # )
     # fig_text.savefig(os.path.join(output_dir, tail + "_text.png"))
 
 
@@ -735,11 +734,11 @@ def ecg_plot(
     plt.close(fig_leads)
     buf.seek(0)
     img = Image.open(buf).convert("RGB")
-    image_matrix = np.array(img)
-    cv2.imwrite(
-        os.path.join(output_dir, tail + "_leads.png"),
-        image_matrix.mean(axis=2).astype(np.uint8),
-    )
+    leads_image_matrix = np.array(img).mean(axis=2).astype(np.uint8)
+    # cv2.imwrite(
+    #     os.path.join(output_dir, tail + "_leads.png"),
+    #     image_matrix.mean(axis=2).astype(np.uint8),
+    # )
 
 
 
@@ -748,12 +747,16 @@ def ecg_plot(
     plt.close(fig_text)
     buf.seek(0)
     img = Image.open(buf).convert("RGB")
-    image_matrix = np.array(img)
+    text_image_matrix = np.array(img).mean(axis=2).astype(np.uint8)
+    # cv2.imwrite(
+    #     os.path.join(output_dir, tail + "_text.png"),
+    #     image_matrix.mean(axis=2).astype(np.uint8),
+    # )
+    mask = np.stack((grid_image_matrix, text_image_matrix, leads_image_matrix), axis=2)
     cv2.imwrite(
-        os.path.join(output_dir, tail + "_text.png"),
-        image_matrix.mean(axis=2).astype(np.uint8),
+        os.path.join(output_dir, tail + "_mask.png"),
+        255 - mask,
     )
-
     json_dict["leads"] = leads_ds
 
     return x_grid_dots, y_grid_dots
